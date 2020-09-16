@@ -6,11 +6,11 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QuitButton window;
+    QuitButton w;
 
-    window.resize(800, 600);
-    window.setWindowTitle("Шифровщик");
-    window.show();
+    w.resize(800, 600);
+    w.setWindowTitle("Шифровщик");
+    w.show();
 
     return a.exec();
 }
