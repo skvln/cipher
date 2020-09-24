@@ -38,16 +38,22 @@ private slots:
 
 private:
     QVector<QString>* text_blocks_ = new QVector<QString>;
-    QTextEdit* input_field_;
-    QTextEdit* output_field_;
+    QTextEdit* input_field_ = new QTextEdit(this);
+    QTextEdit* output_field_ = new QTextEdit(this);
     QLabel* key_label_ = new QLabel("Ключ:", this);
-    QLineEdit* key_line_;
+    QLineEdit* key_line_ = new QLineEdit(this);
     uint second_bit_;
 
-    void Encrypt();
-    void Decrypt();
-    void DivideByBlocks(const QString& text);
-    QString UniteFromBlocks();
+    // Методы для обработки текста
+    QVector<QString>* DivideByBlocks(const QString& text);
+    QString UniteFromBlocks(const QVector<QString>& blocks);
+
+    // Вычисление ключа
+    uint CalculateKey();
+
+    // Методы для шифрования/дешифрования
+    void Encrypt(QVector<QString>& blocks);
+    void Decrypt(QVector<QString>& blocks);
 
 
 signals:

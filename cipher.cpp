@@ -8,10 +8,6 @@ Cipher::Cipher(QWidget *parent) : QWidget(parent)
     // Создание объекта для вертикального размещения нескольких виджетов
     QVBoxLayout* action_btns = new QVBoxLayout(this);
 
-    // Сохранение указателя на поле в атрибут класса
-    input_field_ = new QTextEdit(this);
-    output_field_ = new QTextEdit(this);
-
     // Запрет на редактирование поля вывода
     output_field_->setReadOnly(true);
 
@@ -47,8 +43,46 @@ Cipher::Cipher(QWidget *parent) : QWidget(parent)
     grid->addWidget(output_field_, 0, 1);
     grid->addLayout(action_btns, 0, 2);
     grid->addWidget(key_label_, 1, 0);
-    // grid->addWidget(key_line_, 2, 0);
+    grid->addWidget(key_line_, 2, 0);
     grid->addWidget(quit_btn, 2, 2, Qt::AlignRight);
+}
+
+// Разделение сообщения на блоки для шифрования
+QVector<QString>* Cipher::DivideByBlocks(const QString& text)
+{
+    QVector<QString>* blocks = new QVector<QString>;
+    for (int i = 1; i < text.size(); i += 2)
+    {
+        QString block = "";
+        block.append(text[i - 1]);
+        block.append(text[i]);
+        blocks->append(block);
+    }
+
+    return blocks;
+}
+
+// Объединение блоков в единый текст
+QString Cipher::UniteFromBlocks(const QVector<QString>& blocks)
+{
+    QString text = "";
+    for (const QString& block : blocks)
+    {
+        text += block;
+    }
+
+    return text;
+}
+
+uint Cipher::CalculateKey()
+{
+    uint key = key_line_->text().toInt();
+    for (uint i = 0; i < ROUNDS - 1; ++i)
+    {
+        key = (key + 3) % QCHAR_BITS;
+    }
+
+    return key;
 }
 
 // Обработка нажатия на кнопку "Encrypt"
@@ -61,10 +95,10 @@ void Cipher::ClickOnEncryptBtn()
         text.append(" ");
     }
 
-    DivideByBlocks(text);
-    Encrypt();
+    QVector<QString>* blocks = DivideByBlocks(text);
+    Encrypt(*blocks);
 
-    output_field_->setText(UniteFromBlocks());
+    output_field_->setText(UniteFromBlocks(*blocks));
 }
 
 // Обработка нажатия на кнопку "Decrypt"
@@ -72,10 +106,10 @@ void Cipher::ClickOnDecryptBtn()
 {
     QString text = input_field_->toPlainText();
 
-    DivideByBlocks(text);
-    Decrypt();
+    QVector<QString>* blocks = DivideByBlocks(text);
+    Decrypt(*blocks);
 
-    output_field_->setText(UniteFromBlocks());
+    output_field_->setText(UniteFromBlocks(*blocks));
 }
 
 // Обработка нажатия на кнопку "Read from file"
@@ -132,39 +166,14 @@ void Cipher::ClickOnWriteBtn()
     file.close();
 }
 
-// Разделение сообщения на блоки для шифрования
-void Cipher::DivideByBlocks(const QString& text)
-{
-    text_blocks_->clear();
-    for (int i = 1; i < text.size(); i += 2)
-    {
-        QString block = "";
-        block.append(text[i - 1]);
-        block.append(text[i]);
-        text_blocks_->append(block);
-    }
-}
-
-// Объединение блоков в единый текст
-QString Cipher::UniteFromBlocks()
-{
-    QString text = "";
-    for (const QString& block : *text_blocks_)
-    {
-        text += block;
-    }
-
-    return text;
-}
-
 // Шифрование сообщения
-void Cipher::Encrypt()
+void Cipher::Encrypt(QVector<QString>& blocks)
 {
-    uint first_bit = 0;
-    uint second_bit = 3;
+    uint second_bit = key_line_->text().toInt();
+    uint first_bit = (second_bit + QCHAR_BITS - 3) % QCHAR_BITS;
     for (uint round = 0; round < ROUNDS; ++round)
     {
-        for (QString& block : *text_blocks_)
+        for (QString& block : blocks)
         {
             std::bitset<QCHAR_BITS> left, right;
             left = block[0].unicode();
@@ -183,18 +192,16 @@ void Cipher::Encrypt()
             second_bit = (second_bit + 3) % QCHAR_BITS;
         }
     }
-    // --- Написать функцию вычисления бита по ключу ---
-    second_bit_ = second_bit;
 }
 
 // Дешифрование сообщения
-void Cipher::Decrypt()
+void Cipher::Decrypt(QVector<QString>& blocks)
 {
-    uint first_bit = (second_bit_ + QCHAR_BITS - 3) % QCHAR_BITS;
-    uint second_bit = second_bit_;
+    uint second_bit = CalculateKey();
+    uint first_bit = (second_bit + QCHAR_BITS - 3) % QCHAR_BITS;
     for (uint round = 0; round < ROUNDS; ++round)
     {
-        for (QString& block : *text_blocks_)
+        for (QString& block : blocks)
         {
             std::bitset<QCHAR_BITS> left, right;
             left = block[0].unicode();
