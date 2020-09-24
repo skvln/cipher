@@ -12,11 +12,11 @@ Cipher::Cipher(QWidget *parent) : QWidget(parent)
     output_field_->setReadOnly(true);
 
     // Создание кнопок интерфейса
-    QPushButton* quit_btn = new QPushButton("Quit", this);
-    QPushButton* encrypt_btn = new QPushButton("Encrypt", this);
-    QPushButton* decrypt_btn = new QPushButton("Decrypt", this);
-    QPushButton* read_from_file_btn = new QPushButton("Read from file", this);
-    QPushButton* write_to_file_btn = new QPushButton("Write to file", this);
+    QPushButton* quit_btn = new QPushButton("Закрыть", this);
+    QPushButton* encrypt_btn = new QPushButton("Зашифровать", this);
+    QPushButton* decrypt_btn = new QPushButton("Расшифровать", this);
+    QPushButton* read_from_file_btn = new QPushButton("Открыть", this);
+    QPushButton* write_to_file_btn = new QPushButton("Сохранить как", this);
 
     // Привязка сценариев (слотов) к событиям на кнопках
     connect(quit_btn, &QPushButton::clicked, qApp, &QApplication::quit);
@@ -39,12 +39,14 @@ Cipher::Cipher(QWidget *parent) : QWidget(parent)
     action_btns->setAlignment(Qt::AlignRight);
 
     // Размещение объектов на сетке
-    grid->addWidget(input_field_, 0, 0);
-    grid->addWidget(output_field_, 0, 1);
-    grid->addLayout(action_btns, 0, 2);
-    grid->addWidget(key_label_, 1, 0);
-    grid->addWidget(key_line_, 2, 0);
-    grid->addWidget(quit_btn, 2, 2, Qt::AlignRight);
+    grid->addWidget(input_field_label_, 0, 0);
+    grid->addWidget(input_field_, 1, 0);
+    grid->addWidget(output_field_label_, 0, 1);
+    grid->addWidget(output_field_, 1, 1);
+    grid->addLayout(action_btns, 1, 2);
+    grid->addWidget(key_label_, 2, 0);
+    grid->addWidget(key_line_, 3, 0);
+    grid->addWidget(quit_btn, 3, 2, Qt::AlignRight);
 }
 
 // Разделение сообщения на блоки для шифрования
@@ -74,7 +76,8 @@ QString Cipher::UniteFromBlocks(const QVector<QString>& blocks)
     return text;
 }
 
-uint Cipher::CalculateKey()
+// Расчет ключа для дешифрации
+uint Cipher::CalculateDecryptKey()
 {
     uint key = key_line_->text().toInt();
     for (uint i = 0; i < ROUNDS - 1; ++i)
@@ -159,7 +162,7 @@ void Cipher::ClickOnWriteBtn()
     }
 
     QTextStream out(&file);
-    out.setCodec("Windows-1251");
+    out.setCodec("UTF-8");
 
     out << *text << Qt::endl;
 
@@ -197,7 +200,7 @@ void Cipher::Encrypt(QVector<QString>& blocks)
 // Дешифрование сообщения
 void Cipher::Decrypt(QVector<QString>& blocks)
 {
-    uint second_bit = CalculateKey();
+    uint second_bit = CalculateDecryptKey();
     uint first_bit = (second_bit + QCHAR_BITS - 3) % QCHAR_BITS;
     for (uint round = 0; round < ROUNDS; ++round)
     {
