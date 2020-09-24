@@ -1,16 +1,15 @@
 #include <QApplication>
 #include <QWidget>
-#include "quitbutton.h"
+#include "cipher.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QuitButton w;
+    Cipher window;
 
-    w.resize(800, 600);
-    w.setWindowTitle("Шифровщик");
-    w.show();
+    window.setWindowTitle("Cipher");
+    window.show();
 
     return a.exec();
 }
